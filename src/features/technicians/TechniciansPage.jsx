@@ -1,6 +1,6 @@
-import React, {useState, useEffect} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
-import {Box, Typography, Alert, Snackbar} from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
+import { useDispatch, useSelector } from 'react-redux';
+import { Box, Typography, Alert, Snackbar } from '@mui/material';
 import {
     fetchTechnicians,
     fetchAllTechniciansPerformance,
@@ -19,10 +19,10 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const TechniciansPage = () => {
     const dispatch = useDispatch();
-    const {technicians, performanceData, technicianDetails, status, error} = useSelector(
+    const { technicians, performanceData, technicianDetails, status, error } = useSelector(
         (state) => state.technicians
     );
-    const {tasks} = useSelector((state) => state.tasks);
+    const { tasks } = useSelector((state) => state.tasks);
 
     const [filters, setFilters] = useState({
         status: 'all',
@@ -31,27 +31,29 @@ const TechniciansPage = () => {
     });
 
     const [selectedTechnician, setSelectedTechnician] = useState(null);
-    const [technicianTasks, setTechnicianTasks] = useState([]); // ADD THIS
+    const [technicianTasks, setTechnicianTasks] = useState([]);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [assignOpen, setAssignOpen] = useState(false);
-    const [snackbar, setSnackbar] = useState({open: false, message: '', severity: 'success'});
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const loadData = () => {
+    // FIX 1: Wrap loadData in useCallback to stabilize the function reference
+    const loadData = useCallback(() => {
         dispatch(fetchTechnicians());
         dispatch(fetchAllTechniciansPerformance());
-        dispatch(taskSlice.fetchAllTasks({size: 1000})); // Fetch all tasks for assignment
-    };
+        dispatch(taskSlice.fetchAllTasks({ size: 1000 }));
+    }, [dispatch]);
+
+    // FIX 2: Add loadData to the dependency array
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
 
     const handleFilterChange = (field, value) => {
-        setFilters({...filters, [field]: value});
+        setFilters({ ...filters, [field]: value });
     };
 
     const handleSearch = (searchTerm) => {
-        setFilters({...filters, searchTerm});
+        setFilters({ ...filters, searchTerm });
         if (searchTerm.trim()) {
             dispatch(searchTechnicians(searchTerm));
         } else {
@@ -73,11 +75,9 @@ const TechniciansPage = () => {
         }
     };
 
-    // UPDATED: Fetch technician's current tasks before opening dialog
     const handleAssignTask = async (tech) => {
         setSelectedTechnician(tech);
         try {
-            // Fetch tasks currently assigned to this technician
             const techTasks = await dispatch(taskSlice.fetchTasksByTechnician(tech.id)).unwrap();
             setTechnicianTasks(techTasks);
         } catch (err) {
@@ -104,13 +104,10 @@ const TechniciansPage = () => {
         }
     };
 
-    // UPDATED: Handle new assignment data structure
     const handleAssignTaskSubmit = async (assignmentData) => {
         try {
-            // assignmentData = { technicianId, taskIds: [] }
-            const {technicianId, taskIds} = assignmentData;
+            const { technicianId, taskIds } = assignmentData;
 
-            // Update each task to assign to the technician
             for (const taskId of taskIds) {
                 const task = tasks.find(t => (t.id || t.taskId) === taskId);
                 if (task) {
@@ -136,7 +133,7 @@ const TechniciansPage = () => {
                 severity: 'success'
             });
             setAssignOpen(false);
-            loadData(); // Refresh data
+            loadData();
         } catch (err) {
             setSnackbar({
                 open: true,
@@ -149,13 +146,11 @@ const TechniciansPage = () => {
     const getFilteredTechnicians = () => {
         let filtered = [...technicians];
 
-        // Filter by status
         if (filters.status !== 'all') {
             const statusBool = filters.status === 'online';
             filtered = filtered.filter(tech => tech.enabled === statusBool);
         }
 
-        // Sort
         switch (filters.sortBy) {
             case 'name':
                 filtered.sort((a, b) =>
@@ -166,7 +161,7 @@ const TechniciansPage = () => {
                 filtered.sort((a, b) => {
                     const aTime = a.averageCompletionTimeHours || 999;
                     const bTime = b.averageCompletionTimeHours || 999;
-                    return aTime - bTime; // Lower time = more efficient
+                    return aTime - bTime;
                 });
                 break;
             case 'activeTasks':
@@ -184,18 +179,18 @@ const TechniciansPage = () => {
 
     const filteredTechnicians = getFilteredTechnicians();
 
-    if (status === 'loading' && technicians.length === 0) return <LoadingSpinner/>
+    if (status === 'loading' && technicians.length === 0) return <LoadingSpinner />
 
     return (
-        <Box sx={{width: '100%', p: 3, bgcolor: '#f5f5f5'}}>
-            <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3}}>
+        <Box sx={{ width: '100%', p: 3, bgcolor: '#f5f5f5' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4" gutterBottom>
                     Technician Performance
                 </Typography>
             </Box>
 
             {error && (
-                <Alert severity="error" sx={{mb: 3}} onClose={() => dispatch(clearError())}>
+                <Alert severity="error" sx={{ mb: 3 }} onClose={() => dispatch(clearError())}>
                     {error}
                 </Alert>
             )}
@@ -208,7 +203,7 @@ const TechniciansPage = () => {
 
             {performanceData.length > 0 && (
                 <>
-                    <TechnicianLeaderboard performance={performanceData} technicians={technicians}/>
+                    <TechnicianLeaderboard performance={performanceData} technicians={technicians} />
                 </>
             )}
 
@@ -234,17 +229,17 @@ const TechniciansPage = () => {
                 onClose={() => setAssignOpen(false)}
                 onAssign={handleAssignTaskSubmit}
                 allTasks={tasks}
-                technicianTasks={technicianTasks} // ADD THIS PROP
+                technicianTasks={technicianTasks}
                 loading={status === 'loading'}
             />
 
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}
-                onClose={() => setSnackbar({...snackbar, open: false})}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
             >
                 <Alert
-                    onClose={() => setSnackbar({...snackbar, open: false})}
+                    onClose={() => setSnackbar({ ...snackbar, open: false })}
                     severity={snackbar.severity}
                 >
                     {snackbar.message}
