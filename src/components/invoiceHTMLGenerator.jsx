@@ -34,9 +34,9 @@ export const generateInvoiceHTMLWeb = (invoiceData, calculations, task, addition
     }).join('') : '';
 
     // Safe numeric fallback
-    const laborCostVal = Number(calculations?.laborCost ?? invoiceData?.laborCost ?? 0);
+    const issueCost = Number(calculations?.issueCost ?? invoiceData?.issueCost ?? 0);
     const partsCostVal = Number(calculations?.partsCost ?? invoiceData?.partsCost ?? 0);
-    const subtotalVal = Number(calculations?.subtotal ?? (laborCostVal + partsCostVal));
+    const subtotalVal = Number(calculations?.subtotal ?? (issueCost + partsCostVal));
     const discountVal = Number(calculations?.discountAmount ?? invoiceData?.discount ?? 0);
     const totalVal = Number(calculations?.totalCost ?? (subtotalVal - discountVal));
     return `
@@ -324,7 +324,7 @@ export const generateInvoiceHTMLWeb = (invoiceData, calculations, task, addition
             <div class="info-row"><span class="label">Bike Model:</span><span>${invoiceData?.motorcycleModel || task?.motorcycleModel || 'N/A'}</span></div>
             <div class="info-row"><span class="label">Plate Number:</span><span>${invoiceData?.motorcyclePlateNumber || task?.motorcyclePlateNumber || 'N/A'}</span></div>
             <div class="info-row"><span class="label">Owner:</span><span>${invoiceData?.ownerName || 'N/A'}${invoiceData?.ownerPhone ? ` (${invoiceData?.ownerPhone})` : ''}</span></div>
-            <div class="info-row"><span class="label">Labor Hours:</span><span>${(invoiceData?.laborHours || task?.laborHours || 0).toFixed(2)} hrs @ ${laborRate || 0} RWF/hr</span></div>
+            <div class="info-row"><span class="label">Labor Hours:</span><span>${(invoiceData?.laborHours || task?.laborHours || 0).toFixed(2)} hrs</span></div>
           </div>
         </div>
         <h2 class="section-title">Parts & Materials</h2>
@@ -348,7 +348,7 @@ export const generateInvoiceHTMLWeb = (invoiceData, calculations, task, addition
         <div class="summary-section">
           <div class="summary-row">
             <span class="summary-label">Labor Cost:</span>
-            <span class="summary-value">${laborCostVal.toFixed(0)} RWF</span>
+            <span class="summary-value">${issueCost.toFixed(0)} RWF</span>
           </div>
           <div class="summary-row">
             <span class="summary-label">Parts Cost:</span>

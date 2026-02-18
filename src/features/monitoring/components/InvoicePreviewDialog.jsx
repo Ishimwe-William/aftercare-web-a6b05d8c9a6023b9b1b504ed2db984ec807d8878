@@ -21,6 +21,7 @@ import {
 } from '../../tasks/taskAssignmentSlice';
 import {fetchCaseDetails} from "../monitoringThunks";
 import {fetchInventory} from '../../inventory/inventorySlice';
+import {fetchIssues} from '../../settings/issuesSlice';
 import LoadingSpinner from "../../../components/common/LoadingSpinner";
 
 const Transition = forwardRef(function Transition(props, ref) {
@@ -39,6 +40,7 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
     const caseFromStore = useSelector(s => s.monitoring?.currentCase);
     const {parts: availableParts} = useSelector(s => s.inventory);
     const {currentTaskParts} = useSelector(s => s.tasks);
+    const {issues} = useSelector(s => s.issues);
 
     const [htmlContent, setHtmlContent] = useState('');
     const [showGenerateForm, setShowGenerateForm] = useState(false);
@@ -46,7 +48,8 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
 
     const [formData, setFormData] = useState({
         laborHours: 0,
-        laborRatePerHour: 0,
+        issueCost: 0,
+        selectedIssue: null,
         selectedParts: [],
         discount: 0,
         discountType: 'fixed',
@@ -67,6 +70,7 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
         dispatch(fetchTaskInvoices(caseId));
         dispatch(fetchTaskParts(caseId));
         dispatch(fetchInventory({page: 0, size: 1000}));
+        dispatch(fetchIssues());
         if (!preloadedCaseDetails) dispatch(fetchCaseDetails(caseId));
     }, [open, caseId, preloadedCaseDetails, dispatch]);
 
@@ -88,7 +92,8 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
         setIsGenerating(false);
         setFormData({
             laborHours: 0,
-            laborRatePerHour: 0,
+            issueCost: 0,
+            selectedIssue: null,
             selectedParts: [],
             discount: 0,
             discountType: 'fixed',
@@ -110,7 +115,8 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
 
         setFormData({
             laborHours: safeParseNumber(task.laborHours),
-            laborRatePerHour: safeParseNumber(laborRate),
+            issueCost: safeParseNumber(task.issueCost, 0),
+            selectedIssue: null,
             selectedParts: mappedParts,
             discount: 0,
             discountType: 'fixed',
@@ -138,8 +144,7 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
         }));
 
         const calculations = calculateTotals({
-            laborHours: invoice.laborHours || task.laborHours,
-            laborRatePerHour: laborRate,
+            issueCost: invoice?.issueCost || task?.issueCost,
             selectedParts: normalizedParts,
             discount: invoice.discount || 0,
             discountType: 'fixed'
@@ -156,17 +161,14 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
     };
 
     const calculateTotals = (data) => {
-        const laborHours = safeParseNumber(data.laborHours);
-        const laborRatePerHour = safeParseNumber(data.laborRatePerHour);
-        const laborCost = laborHours * laborRatePerHour;
-
+        const issueCost = safeParseNumber(data.issueCost);  // Changed to use issueCost as laborCost
         const partsCost = data.selectedParts.reduce((sum, part) => {
             const quantity = safeParseNumber(part.quantity);
             const cost = safeParseNumber(part.cost);
             return sum + (quantity * cost);
         }, 0);
 
-        const subtotal = laborCost + partsCost;
+        const subtotal = issueCost + partsCost;  // Updated to include issueCost
 
         let discountAmount = 0;
         if (data.discountType === 'percentage') {
@@ -179,7 +181,7 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
         const totalCost = Math.max(0, subtotal - discountAmount);
 
         return {
-            laborCost,
+            issueCost,  // Added issueCost to return
             partsCost,
             subtotal,
             discountAmount,
@@ -188,7 +190,13 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
     };
 
     const handleFormChange = (field, value) => {
-        setFormData(prev => ({...prev, [field]: value}));
+        setFormData(prev => {
+            const newData = { ...prev, [field]: value };
+            if (field === 'selectedIssue' && value) {
+                newData.issueCost = safeParseNumber(value.price, 0);  // Auto-fill issueCost with the selected issue's price
+            }
+            return newData;
+        });
     };
 
     const handleAddPart = (part, quantity = 1) => {
@@ -235,6 +243,11 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
 
     const handleGenerateNew = async () => {
         if (!caseId || invoiceLoading || isGenerating) return;
+
+        if (!formData.selectedIssue) {
+            alert('Please select an issue.');
+            return;
+        }
 
         const calculations = calculateTotals(formData);
 
@@ -298,8 +311,9 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
             // 3. Generate Invoice
             const invoiceData = {
                 taskId: caseId,
+                issueId: formData.selectedIssue.id,
                 laborHours: formData.laborHours,
-                laborCost: calculations.laborCost,
+                laborCost: calculations.issueCost,
                 partsCost: calculations.partsCost,
                 discount: calculations.discountAmount,
                 items: partsToProcess.map(p => ({
@@ -409,9 +423,24 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
                     <Paper elevation={3} sx={{maxWidth: '900px', margin: '0 auto', p: 4}}>
                         <Typography variant="h5" gutterBottom>Generate New Invoice</Typography>
 
+                        {/* Issue Selection */}
+                        <Box sx={{mb: 3}}>
+                            <Typography variant="h6" gutterBottom>Select Issue</Typography>
+                            <Autocomplete
+                                options={issues || []}
+                                getOptionLabel={(option) => option.name || option.description || `Issue ${option.id}`}
+                                value={formData.selectedIssue}
+                                onChange={(e, value) => handleFormChange('selectedIssue', value)}
+                                renderInput={(params) => (
+                                    <TextField {...params} label="Select Issue" placeholder="Choose an issue..."/>
+                                )}
+                                sx={{mb: 2}}
+                            />
+                        </Box>
+
                         {/* Labor Section */}
                         <Box sx={{mb: 3}}>
-                            <Typography variant="h6" gutterBottom sx={{mt: 2}}>Labor</Typography>
+                            <Typography variant="h6" gutterBottom>Labor</Typography>
                             <Grid container spacing={2}>
                                 <Grid item xs={12} sm={6}>
                                     <TextField
@@ -426,17 +455,17 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
                                 <Grid item xs={12} sm={6}>
                                     <TextField
                                         fullWidth
-                                        label="Labor Rate (RWF/hour)"
+                                        label="Issue Cost (RWF)"
                                         type="number"
-                                        value={formData.laborRatePerHour}
-                                        onChange={(e) => handleFormChange('laborRatePerHour', parseFloat(e.target.value) || 0)}
+                                        value={formData.issueCost}
+                                        onChange={(e) => handleFormChange('issueCost', parseFloat(e.target.value) || 0)}
                                         inputProps={{min: 0}}
                                     />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <Box sx={{p: 2, bgcolor: '#f0f0f0', borderRadius: 1}}>
-                                        <Typography variant="body2" color="textSecondary">Labor Cost</Typography>
-                                        <Typography variant="h6">{calculations.laborCost.toFixed(0)} RWF</Typography>
+                                        <Typography variant="body2" color="textSecondary">Issue Cost</Typography>
+                                        <Typography variant="h6">{calculations.issueCost?.toFixed(0)} RWF</Typography>
                                     </Box>
                                 </Grid>
                             </Grid>
@@ -542,11 +571,11 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
                         <Box sx={{p: 3, bgcolor: '#e3f2fd', borderRadius: 2, mb: 3}}>
                             <Grid container spacing={2}>
                                 <Grid item xs={6}>
-                                    <Typography variant="body1">Labor Cost:</Typography>
+                                    <Typography variant="body1">Issue Cost:</Typography>
                                 </Grid>
                                 <Grid item xs={6}>
                                     <Typography variant="body1"
-                                                align="right">{calculations.laborCost.toFixed(0)} RWF</Typography>
+                                                align="right">{calculations?.issueCost?.toFixed(0)} RWF</Typography>
                                 </Grid>
                                 <Grid item xs={6}>
                                     <Typography variant="body1">Parts Cost:</Typography>
