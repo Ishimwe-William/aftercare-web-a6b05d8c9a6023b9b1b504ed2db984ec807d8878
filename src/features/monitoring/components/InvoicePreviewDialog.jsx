@@ -113,10 +113,13 @@ const InvoicePreviewDialog = ({open, onClose, caseId, preloadedCaseDetails = nul
             quantity: safeParseNumber(p.quantityUsed || p.quantity, 1)
         }));
 
+        // Find matching issue based on task's issueType
+        const matchingIssue = issues.find(issue => issue.name === task.issueType);
+
         setFormData({
             laborHours: safeParseNumber(task.laborHours),
-            issueCost: safeParseNumber(task.issueCost, 0),
-            selectedIssue: null,
+            issueCost: matchingIssue ? safeParseNumber(matchingIssue.price, 0) : safeParseNumber(task.issueCost, 0),  // Auto-fill issueCost from matching issue's price or task's issueCost
+            selectedIssue: matchingIssue || null,  // Auto-fill selectedIssue if match found
             selectedParts: mappedParts,
             discount: 0,
             discountType: 'fixed',
