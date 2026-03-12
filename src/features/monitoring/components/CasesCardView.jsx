@@ -15,13 +15,13 @@ const CasesCardView = ({cases, onView, onReassign, onGenerateInvoice}) => {
                     <Card>
                         <CardContent>
                             <Box sx={{display: 'flex', justifyContent: 'space-between', mb: 1}}>
-                                <Typography variant="h6">{c.caseId}</Typography>
+                                <Typography variant="h6">{c.caseId?.substring(0,7)}</Typography>
                                 <Chip label={c.status} color={getStatusColor(c.status)} size="small"/>
                             </Box>
                             <Typography color="textSecondary" variant="body2" gutterBottom>
                                 {c.motorcycle.plateNumber} • {c.motorcycle.model}
                             </Typography>
-                            <Typography variant="body2" sx={{mb: 1}}>{c.issue}</Typography>
+                            <Typography variant="body2" sx={{mb: 1}}>{c.issueType}</Typography>
                             <Typography variant="body2" color="textSecondary" sx={{mb: 2}}>
                                 Technician: {c.technician}
                             </Typography>

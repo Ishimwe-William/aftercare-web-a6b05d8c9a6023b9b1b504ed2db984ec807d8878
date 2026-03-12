@@ -10,15 +10,15 @@ export const fetchServiceCases = createAsyncThunk(
                startDate,
                endDate,
                page = 0,
-               size = 10,
+               size = 500,
                sortBy = 'createdAt',
                sortDir = 'DESC'
            }, {rejectWithValue}) => {
         try {
             const params = {
                 ...(status && {status}),
-                technicianId,
-                motorcycleId,
+                ...(technicianId && {technicianId}),
+                ...(motorcycleId && {motorcycleId}),
                 ...(startDate && {startDate: startDate.toISOString()}),
                 ...(endDate && {endDate: endDate.toISOString()}),
                 page,

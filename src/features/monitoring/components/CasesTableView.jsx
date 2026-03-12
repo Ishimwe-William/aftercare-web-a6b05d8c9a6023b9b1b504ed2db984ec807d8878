@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, {useState, useMemo} from 'react';
 import {
     TableContainer,
     Table,
@@ -16,7 +16,7 @@ import {
     TableFooter,
     TableSortLabel
 } from '@mui/material';
-import { Visibility, SwapHoriz, Receipt } from '@mui/icons-material';
+import {Visibility, SwapHoriz, Receipt} from '@mui/icons-material';
 
 // --- Sorting Helper Functions ---
 function descendingComparator(a, b, orderBy) {
@@ -38,14 +38,13 @@ function descendingComparator(a, b, orderBy) {
     return 0;
 }
 
-function getComparator(order, orderBy) {
-    return order === 'desc'
-        ? (a, b) => descendingComparator(a, b, orderBy)
-        : (a, b) => -descendingComparator(a, b, orderBy);
-}
+const getComparator = (order, orderBy) => order === 'desc'
+    ? (a, b) => descendingComparator(a, b, orderBy)
+    : (a, b) => -descendingComparator(a, b, orderBy);
 
-function stableSort(array, comparator) {
-    const stabilizedThis = array.map((el, index) => [el, index]);
+const stableSort = (array, comparator) => {
+    let stabilizedThis;
+    stabilizedThis = array.map((el, index) => [el, index]);
     stabilizedThis.sort((a, b) => {
         const order = comparator(a[0], b[0]);
         if (order !== 0) {
@@ -54,19 +53,20 @@ function stableSort(array, comparator) {
         return a[1] - b[1];
     });
     return stabilizedThis.map((el) => el[0]);
-}
+};
 
 // --- Table Header Configuration ---
 const headCells = [
-    { id: 'caseId', label: 'Case ID', sortable: true },
-    { id: 'motorcycle', label: 'Motorcycle', sortable: true },
-    { id: 'issue', label: 'Issue', sortable: true },
-    { id: 'technician', label: 'Technician', sortable: true },
-    { id: 'status', label: 'Status', sortable: true },
-    { id: 'progress', label: 'Progress', sortable: true },
-    { id: 'priority', label: 'Priority', sortable: true },
-    { id: 'createdAt', label: 'Created At', sortable: true },
-    { id: 'actions', label: 'Actions', sortable: false },
+    {id: 'caseId', label: 'Case ID', sortable: true},
+    {id: 'motorcycle', label: 'Motorcycle', sortable: true},
+    {id: 'issueType', label: 'Issue', sortable: true},
+    {id: 'issue', label: 'Description', sortable: true},
+    {id: 'technician', label: 'Technician', sortable: true},
+    {id: 'status', label: 'Status', sortable: true},
+    {id: 'progress', label: 'Progress', sortable: true},
+    {id: 'priority', label: 'Priority', sortable: true},
+    {id: 'createdAt', label: 'Created At', sortable: true},
+    {id: 'actions', label: 'Actions', sortable: false},
 ];
 
 const CasesTableView = ({
@@ -90,7 +90,7 @@ const CasesTableView = ({
     };
 
     const getStatusColor = (status) => {
-        const colors = { PENDING: 'warning', IN_PROGRESS: 'info', COMPLETED: 'success', CANCELLED: 'error' };
+        const colors = {PENDING: 'warning', IN_PROGRESS: 'info', COMPLETED: 'success', CANCELLED: 'error'};
         return colors[status] || 'default';
     };
 
@@ -128,32 +128,33 @@ const CasesTableView = ({
                 <TableBody>
                     {sortedCases.map(c => (
                         <TableRow key={c.caseId} hover>
-                            <TableCell>{c.caseId}</TableCell>
+                            <TableCell>{c.caseId?.substring(0, 8)}</TableCell>
                             <TableCell>{c.motorcycle.plateNumber}</TableCell>
+                            <TableCell>{c.issueType}</TableCell>
                             <TableCell>{c.issue}</TableCell>
                             <TableCell>{c.technician}</TableCell>
                             <TableCell>
-                                <Chip label={c.status} color={getStatusColor(c.status)} size="small" />
+                                <Chip label={c.status} color={getStatusColor(c.status)} size="small"/>
                             </TableCell>
                             <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                                     <LinearProgress variant="determinate" value={c.progress}
-                                                    sx={{ flex: 1, height: 8, borderRadius: 4 }} />
+                                                    sx={{flex: 1, height: 8, borderRadius: 4}}/>
                                     <Typography variant="body2">{c.progress}%</Typography>
                                 </Box>
                             </TableCell>
                             <TableCell>
                                 <Chip label={c.priority || 'N/A'} size="small"
-                                      color={c.priority === 'HIGH' ? 'error' : c.priority === 'MEDIUM' ? 'warning' : 'default'} />
+                                      color={c.priority === 'HIGH' ? 'error' : c.priority === 'MEDIUM' ? 'warning' : 'default'}/>
                             </TableCell>
                             <TableCell>{c.createdAt?.substring(0, c.createdAt?.indexOf('T'))}</TableCell>
-                            <TableCell align='left' sx={{ minWidth: 130, }}>
+                            <TableCell align="left" sx={{minWidth: 130,}}>
                                 <IconButton
                                     size="small"
                                     onClick={() => onView(c)}
                                     title="View Task Details"
                                 >
-                                    <Visibility fontSize="small" />
+                                    <Visibility fontSize="small"/>
                                 </IconButton>
                                 <IconButton
                                     disabled={c.status === 'COMPLETED'}
@@ -161,7 +162,7 @@ const CasesTableView = ({
                                     onClick={() => onReassign(c)}
                                     title="Reassign Technician"
                                 >
-                                    <SwapHoriz fontSize="small" />
+                                    <SwapHoriz fontSize="small"/>
                                 </IconButton>
                                 {c.status === 'COMPLETED' && (
                                     <IconButton
@@ -170,7 +171,7 @@ const CasesTableView = ({
                                         onClick={() => onGenerateInvoice(c)}
                                         title="Generate/View Invoice"
                                     >
-                                        <Receipt fontSize="small" />
+                                        <Receipt fontSize="small"/>
                                     </IconButton>
                                 )}
                             </TableCell>
@@ -178,13 +179,12 @@ const CasesTableView = ({
                     ))}
                 </TableBody>
 
-                {/* Add TableFooter for pagination control */}
                 <TableFooter>
                     <TableRow>
                         <TablePagination
-                            rowsPerPageOptions={[5, 10, 25, { label: 'All', value: totalCases }]}
-                            colSpan={9} // Updated colspan to match number of columns
-                            count={totalCases} // Total number of filtered items
+                            rowsPerPageOptions={[5, 10, 25, {label: 'All', value: -1}]}
+                            colSpan={9}
+                            count={totalCases}
                             rowsPerPage={rowsPerPage}
                             page={page}
                             slotProps={{

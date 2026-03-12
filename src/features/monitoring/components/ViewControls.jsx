@@ -1,9 +1,8 @@
-import React from 'react';
 import {Box, Tabs, Tab, Button} from '@mui/material';
-import {FileDownload} from '@mui/icons-material';
+import {FileDownload, PictureAsPdf} from '@mui/icons-material';
 import Papa from 'papaparse';
 
-const ViewControls = ({viewMode, setViewMode, cases}) => {
+const ViewControls = ({viewMode, setViewMode, cases, onExportPdf, isExporting}) => {
     const handleExport = () => {
         if (!cases.length) return;
         const csv = cases.map(c => ({
@@ -18,8 +17,8 @@ const ViewControls = ({viewMode, setViewMode, cases}) => {
             'Status': c.status,
             'Progress': `${c.progress}%`,
             'Create At': c.createdAt,
-            'Start Time': new Date(c.startTime).toLocaleString(),
-            'Due Time': new Date(c.dueTime).toLocaleString(),
+            'Start Time': c.startTime ? new Date(c.startTime).toLocaleString() : 'N/A',
+            'Due Time': c.dueTime ? new Date(c.dueTime).toLocaleString() : 'N/A',
             'Priority': c.priority || 'N/A',
             'Notes': c.notes || 'N/A',
         }));
@@ -38,9 +37,19 @@ const ViewControls = ({viewMode, setViewMode, cases}) => {
                 <Tab label="Table View"/>
                 <Tab label="Card View"/>
             </Tabs>
-            <Button variant="outlined" startIcon={<FileDownload/>} onClick={handleExport} disabled={!cases.length}>
-                Export CSV
-            </Button>
+            {/* Export buttons — side by side */}
+            <Box sx={{display: 'flex', gap: 1}}>
+                <Button variant="outlined" startIcon={<FileDownload/>} onClick={handleExport} disabled={!cases.length}>
+                    Export CSV
+                </Button>
+                <Button
+                    variant="outlined"
+                    startIcon={<PictureAsPdf fontSize="small"/>}
+                    onClick={onExportPdf}
+                    disabled={isExporting || !cases.length}>
+                    {isExporting ? 'Exporting…' : 'Export PDF'}
+                </Button>
+            </Box>
         </Box>
     );
 };

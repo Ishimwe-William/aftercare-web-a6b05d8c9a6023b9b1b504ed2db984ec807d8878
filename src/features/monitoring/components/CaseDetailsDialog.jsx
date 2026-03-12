@@ -38,7 +38,11 @@ const CaseDetailsDialog = ({open, onClose, caseDetails}) => {
                     </Box>
                     <Box>
                         <Typography variant="subtitle2" color="textSecondary">Issue</Typography>
-                        <Typography>{caseDetails.caseInfo.issue}</Typography>
+                        <Typography>{caseDetails.caseInfo.issueType}</Typography>
+                    </Box>
+                    <Box>
+                        <Typography variant="subtitle2" color="textSecondary">Description</Typography>
+                        <Typography>{caseDetails.caseInfo.issue || "---"}</Typography>
                     </Box>
                     <Box>
                         <Typography variant="subtitle2" color="textSecondary">Technician</Typography>
