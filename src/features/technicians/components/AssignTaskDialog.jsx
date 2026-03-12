@@ -19,6 +19,7 @@ import {
     Divider
 } from '@mui/material';
 import { Search } from '@mui/icons-material';
+import { SpecialityChip } from '../../../utils/specialityUtils';
 
 const AssignTaskDialog = ({
                               open,
@@ -158,6 +159,12 @@ const AssignTaskDialog = ({
             <DialogContent>
                 {technician && (
                     <Box sx={{ mb: 3 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                            <Typography variant="subtitle2">
+                                {technician.fullName || technician.username}
+                            </Typography>
+                            <SpecialityChip speciality={technician.speciality} />
+                        </Box>
                         <Typography variant="body2" color="text.secondary">
                             Current Active Tasks: {technician.activeTasks || 0}
                         </Typography>

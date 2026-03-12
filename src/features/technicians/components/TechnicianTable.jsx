@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, {useState, useMemo} from 'react';
 import {
     Paper,
     Box,
@@ -68,14 +68,15 @@ function stableSort(array, comparator) {
 
 // --- Table Configuration ---
 const headCells = [
-    { id: 'fullName', label: 'Technician', sortable: true },
-    { id: 'id', label: 'ID', sortable: true },
-    { id: 'email', label: 'Email', sortable: true },
-    { id: 'phoneNumber', label: 'Phone', sortable: true },
-    { id: 'status', label: 'Status', sortable: true },
-    { id: 'activeTasks', label: 'Active Tasks', sortable: true },
-    { id: 'completedTasks', label: 'Completed Tasks', sortable: true },
-    { id: 'actions', label: 'Actions', sortable: false },
+    {id: 'id', label: 'ID', sortable: true},
+    {id: 'fullName', label: 'Technician', sortable: true},
+    {id: 'speciality', label: 'Speciality', sortable: true},
+    {id: 'email', label: 'Email', sortable: true},
+    {id: 'phoneNumber', label: 'Phone', sortable: true},
+    {id: 'status', label: 'Status', sortable: true},
+    {id: 'activeTasks', label: 'Active Tasks', sortable: true},
+    {id: 'completedTasks', label: 'Completed Tasks', sortable: true},
+    {id: 'actions', label: 'Actions', sortable: false},
 ];
 
 const TechnicianTable = ({
@@ -164,7 +165,7 @@ const TechnicianTable = ({
     };
 
     const downloadCSV = (csv, filename) => {
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
@@ -175,22 +176,22 @@ const TechnicianTable = ({
         document.body.removeChild(link);
     };
 
-    if (loading) <LoadingSpinner />
+    if (loading) <LoadingSpinner/>
 
     return (
-        <Paper sx={{ width: '100%' }}>
-            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Paper sx={{width: '100%'}}>
+            <Box sx={{p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                 <Typography variant="h6">Technician List</Typography>
                 <Button
                     variant="outlined"
-                    startIcon={<Download />}
+                    startIcon={<Download/>}
                     onClick={handleGenerateReport}
                     disabled={technicians.length === 0}
                 >
                     Export CSV
                 </Button>
             </Box>
-            <TableContainer sx={{ maxHeight: 440 }}>
+            <TableContainer sx={{maxHeight: 440}}>
                 <Table size="small" stickyHeader>
                     <TableHead>
                         <TableRow>
@@ -224,10 +225,11 @@ const TechnicianTable = ({
                         ) : (
                             visibleRows.map((tech) => (
                                 <TableRow key={tech.id} hover>
+                                    <TableCell size='small'>{tech.id?.substring(0, 8)}</TableCell>
                                     <TableCell size='small'>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                                             <Avatar
-                                                sx={{ width: 32, height: 32 }}
+                                                sx={{width: 32, height: 32}}
                                                 src={tech.photoUrl}
                                             >
                                                 {getInitials(tech.fullName || tech.username)}
@@ -237,7 +239,7 @@ const TechnicianTable = ({
                                             </Typography>
                                         </Box>
                                     </TableCell>
-                                    <TableCell size='small'>{tech.id}</TableCell>
+                                    <TableCell size='small'>{tech?.speciality}</TableCell>
                                     <TableCell size='small'>{tech.email}</TableCell>
                                     <TableCell size='small'>{tech.phoneNumber || 'N/A'}</TableCell>
                                     <TableCell size='small'>
@@ -249,14 +251,14 @@ const TechnicianTable = ({
                                     </TableCell>
                                     <TableCell size='small'>{tech.activeTasks || 0}</TableCell>
                                     <TableCell size='small'>{tech.completedTasks || 0}</TableCell>
-                                    <TableCell size='small' sx={{ minWidth: 150 }}>
+                                    <TableCell size='small' sx={{minWidth: 150}}>
                                         <IconButton
                                             size="small"
                                             color="primary"
                                             onClick={() => onViewDetails(tech)}
                                             title="View Details"
                                         >
-                                            <Visibility />
+                                            <Visibility/>
                                         </IconButton>
                                         <IconButton
                                             size="small"
@@ -264,14 +266,14 @@ const TechnicianTable = ({
                                             onClick={() => onAssignTask(tech)}
                                             title="Assign Task"
                                         >
-                                            <Assignment />
+                                            <Assignment/>
                                         </IconButton>
                                         <IconButton
                                             size="small"
                                             onClick={() => onToggleStatus(tech.id)}
                                             title="Toggle Status"
                                         >
-                                            {tech.status ? <ToggleOn color="success" /> : <ToggleOff />}
+                                            {tech.status ? <ToggleOn color="success"/> : <ToggleOff/>}
                                         </IconButton>
                                     </TableCell>
                                 </TableRow>

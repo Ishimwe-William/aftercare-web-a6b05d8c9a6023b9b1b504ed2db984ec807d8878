@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 import { Description } from '@mui/icons-material';
 import { format } from 'date-fns';
+import { SpecialityChip } from '../../../utils/specialityUtils';
 
 const TechnicianDetailsDialog = ({ open, technician, details, onClose }) => {
     const [tabValue, setTabValue] = useState(0);
@@ -52,6 +53,7 @@ const TechnicianDetailsDialog = ({ open, technician, details, onClose }) => {
         rows.push(['Technician Info', 'Email', technician.email]);
         rows.push(['Technician Info', 'Phone', technician.phoneNumber || 'N/A']);
         rows.push(['Technician Info', 'Status', technician.status ? 'Online' : 'Offline']);
+        rows.push(['Technician Info', 'Speciality', technician.speciality || 'N/A']);
         rows.push(['Technician Info', 'Roles', technician.roles?.join(', ') || 'N/A']);
         rows.push(['Technician Info', 'Created At', technician.createdAt || 'N/A']);
         rows.push(['Technician Info', 'Updated At', technician.updatedAt || 'N/A']);
@@ -125,9 +127,17 @@ const TechnicianDetailsDialog = ({ open, technician, details, onClose }) => {
                             {getInitials(technician.fullName || technician.username)}
                         </Avatar>
                         <Box>
-                            <Typography variant="h6">
-                                {technician.fullName || technician.username}
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                <Typography variant="h6">
+                                    {technician.fullName || technician.username}
+                                </Typography>
+                                <SpecialityChip speciality={technician.speciality} />
+                                <Chip
+                                    label={technician.status ? 'Online' : 'Offline'}
+                                    color={getStatusColor(technician.status)}
+                                    size="small"
+                                />
+                            </Box>
                             <Typography variant="body2" color="text.secondary">
                                 ID: {technician.id}
                             </Typography>
@@ -162,6 +172,14 @@ const TechnicianDetailsDialog = ({ open, technician, details, onClose }) => {
                                         color={getStatusColor(technician.status)}
                                         size="small"
                                     />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Speciality
+                                    </Typography>
+                                    <Box sx={{ mt: 0.5 }}>
+                                        <SpecialityChip speciality={technician.speciality} />
+                                    </Box>
                                 </Grid>
                                 <Grid item xs={6}>
                                     <Typography variant="body2" color="text.secondary">

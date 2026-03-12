@@ -7,6 +7,7 @@ import {
     Button,
     Stack,
     Typography,
+    Box,
 } from '@mui/material';
 import {
     FilterList as FilterIcon,
@@ -14,6 +15,7 @@ import {
     CalendarToday
 } from '@mui/icons-material';
 import DateRangePicker from '../../../utils/DateRangePicker';
+import { SpecialityChip } from '../../../utils/specialityUtils';
 
 export const TaskFiltersPanel = ({ filters, onFilterChange, technicians, openDialog }) => {
     const [datePickerOpen, setDatePickerOpen] = useState(false);
@@ -62,7 +64,6 @@ export const TaskFiltersPanel = ({ filters, onFilterChange, technicians, openDia
             <Grid container spacing={2}>
                 {/* Status */}
                 <Grid item xs={12} sm={6} md={3}>
-
                     <TextField
                         select
                         fullWidth
@@ -82,29 +83,18 @@ export const TaskFiltersPanel = ({ filters, onFilterChange, technicians, openDia
 
                 {/* Priority — already working perfectly */}
                 <Grid item xs={12} sm={6} md={3}>
-                    {/*<TextField*/}
-                    {/*    select*/}
-                    {/*    fullWidth*/}
-                    {/*    size="small"*/}
-                    {/*    label="Priority"*/}
-                    {/*    value={filters.priority}*/}
-                    {/*    onChange={(e) => handleChange('priority', e.target.value)}*/}
-                    {/*>*/}
-                    {/*    <MenuItem value="all">All Priorities</MenuItem>*/}
-                    {/*    <MenuItem value="HIGH">High</MenuItem>*/}
-                    {/*    <MenuItem value="MEDIUM">Medium</MenuItem>*/}
-                    {/*    <MenuItem value="LOW">Low</MenuItem>*/}
-                    {/*</TextField>*/}
-
-                    <TextField select fullWidth size="small" label="Priority"
-                               value={filters.priority}
-                               onChange={(e) => handleChange('priority', e.target.value)}
+                    <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        label="Priority"
+                        value={filters.priority}
+                        onChange={(e) => handleChange('priority', e.target.value)}
                     >
                         <MenuItem value="all">All Priorities</MenuItem>
-                        <MenuItem value="critical">Critical</MenuItem>   {/* ← ADD */}
-                        <MenuItem value="high">High</MenuItem>           {/* ← lowercase */}
-                        <MenuItem value="medium">Medium</MenuItem>       {/* ← lowercase */}
-                        <MenuItem value="low">Low</MenuItem>             {/* ← lowercase */}
+                        <MenuItem value="HIGH">High</MenuItem>
+                        <MenuItem value="MEDIUM">Medium</MenuItem>
+                        <MenuItem value="LOW">Low</MenuItem>
                     </TextField>
                 </Grid>
 
@@ -117,11 +107,38 @@ export const TaskFiltersPanel = ({ filters, onFilterChange, technicians, openDia
                         label="Technician"
                         value={filters.technicianId}
                         onChange={(e) => handleChange('technicianId', e.target.value)}
+                        SelectProps={{
+                            renderValue: (selectedId) => {
+                                if (!selectedId) return 'All Technicians';
+                                const tech = technicians?.find(t => t.id === selectedId);
+                                if (!tech) return '';
+                                return (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <span>{tech.fullName}</span>
+                                        {tech.speciality && (
+                                            <SpecialityChip speciality={tech.speciality} sx={{ ml: 0.5 }} />
+                                        )}
+                                    </Box>
+                                );
+                            }
+                        }}
                     >
                         <MenuItem value="">All Technicians</MenuItem>
                         {technicians?.map((tech) => (
                             <MenuItem key={tech.id} value={tech.id}>
-                                {tech.fullName}
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        <span>{tech.fullName}</span>
+                                        <Box
+                                            sx={{
+                                                width: 7, height: 7, borderRadius: '50%',
+                                                bgcolor: tech.status ? 'success.main' : 'grey.400',
+                                                flexShrink: 0
+                                            }}
+                                        />
+                                    </Box>
+                                    <SpecialityChip speciality={tech.speciality} />
+                                </Box>
                             </MenuItem>
                         ))}
                     </TextField>

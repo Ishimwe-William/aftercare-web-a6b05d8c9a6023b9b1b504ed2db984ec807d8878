@@ -42,6 +42,7 @@ import {
     VpnKey,
 } from '@mui/icons-material';
 import {useDispatch, useSelector} from 'react-redux';
+import { SpecialityChip, SPECIALITY_OPTIONS } from '../../../utils/specialityUtils';
 import {
     fetchUsers,
     createUser,
@@ -130,7 +131,8 @@ const UserManagementSection = () => {
         fullName: '',
         phoneNumber: '',
         roles: ['ROLE_STAFF'],
-        enabled: true
+        enabled: true,
+        speciality: ''
     });
 
     useEffect(() => {
@@ -154,7 +156,8 @@ const UserManagementSection = () => {
                 fullName: user.fullName || '',
                 phoneNumber: user.phoneNumber || '',
                 roles: user.roles || ['ROLE_STAFF'],
-                status: user.status
+                status: user.status,
+                speciality: user.speciality || ''
             });
         } else {
             setFormData({
@@ -163,7 +166,8 @@ const UserManagementSection = () => {
                 fullName: '',
                 phoneNumber: '',
                 roles: ['ROLE_STAFF'],
-                status: true
+                status: true,
+                speciality: ''
             });
         }
 
@@ -359,6 +363,10 @@ const UserManagementSection = () => {
                                     onClick={() => handleToggleStatus(user.id)}
                                     disabled={isProtectedUser(user)}
                                 />
+                                {/* Show speciality badge for technicians */}
+                                {user.roles?.[0] === 'ROLE_TECHNICIAN' && (
+                                    <SpecialityChip speciality={user.speciality} />
+                                )}
                             </Box>
                             <Typography variant="caption" color="text.secondary">
                                 Created: {formatDate(user.createdAt)}
@@ -440,6 +448,7 @@ const UserManagementSection = () => {
                                 Created
                             </TableSortLabel>
                         </TableCell>
+                        <TableCell>Speciality</TableCell>
                         <TableCell align="right">Actions</TableCell>
                     </TableRow>
                 </TableHead>
@@ -483,6 +492,13 @@ const UserManagementSection = () => {
                                     />
                                 </TableCell>
                                 <TableCell>{formatDate(user.createdAt)}</TableCell>
+                                {/* Only technicians have a speciality */}
+                                <TableCell>
+                                    {user.roles?.[0] === 'ROLE_TECHNICIAN'
+                                        ? <SpecialityChip speciality={user.speciality} />
+                                        : <Typography variant="caption" color="text.secondary">—</Typography>
+                                    }
+                                </TableCell>
                                 <TableCell align="right" sx={{minWidth: 150}}>
                                     <IconButton
                                         size="small"
@@ -511,7 +527,7 @@ const UserManagementSection = () => {
                     })}
                     {paginatedUsers.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={7} align="center">
+                            <TableCell colSpan={9} align="center">
                                 No users found
                             </TableCell>
                         </TableRow>
@@ -686,6 +702,26 @@ const UserManagementSection = () => {
                                 </Select>
                             </FormControl>
                         </Grid>
+                        {/* Speciality — only relevant for technicians */}
+                        {formData.roles[0] === 'ROLE_TECHNICIAN' && (
+                            <Grid item xs={12} sx={{ minWidth: 120}}>
+                                <FormControl fullWidth>
+                                    <InputLabel>Speciality</InputLabel>
+                                    <Select
+                                        variant="outlined"
+                                        value={formData.speciality || ''}
+                                        onChange={(e) => handleFormChange('speciality', e.target.value)}
+                                        label="Speciality"
+                                    >
+                                        <MenuItem value="">None / General</MenuItem>
+                                        {SPECIALITY_OPTIONS.map(opt => (
+                                            <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                        )}
+
                         {dialogMode === 'create' && (
                             <Grid item xs={12}>
                                 <Alert severity="info">

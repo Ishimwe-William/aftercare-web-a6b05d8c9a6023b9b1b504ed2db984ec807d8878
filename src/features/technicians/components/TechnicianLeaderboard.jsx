@@ -11,6 +11,7 @@ import {
     Tooltip
 } from '@mui/material';
 import {TrendingUp, Info} from '@mui/icons-material';
+import { SpecialityChip } from '../../../utils/specialityUtils';
 
 const TechnicianLeaderboard = ({technicians = [], performance}) => {
     // Filter technicians who have completed at least one task
@@ -21,6 +22,11 @@ const TechnicianLeaderboard = ({technicians = [], performance}) => {
     const getPhotoUrl = (techId) => {
         const tech = technicians.find((t) => t?.id === techId);
         return tech?.photoUrl || null;
+    }
+
+    const getSpeciality = (techId) => {
+        const tech = technicians.find((t) => t?.id === techId);
+        return tech?.speciality || null;
     }
 
     if (validTechs.length === 0) {
@@ -114,12 +120,15 @@ const TechnicianLeaderboard = ({technicians = [], performance}) => {
                                             <Typography variant="subtitle1" noWrap>
                                                 {name}
                                             </Typography>
-                                            <Rating
-                                                value={rating}
-                                                readOnly
-                                                size="small"
-                                                precision={0.1}
-                                            />
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.25 }}>
+                                                <Rating
+                                                    value={rating}
+                                                    readOnly
+                                                    size="small"
+                                                    precision={0.1}
+                                                />
+                                                <SpecialityChip speciality={getSpeciality(tech?.technicianId)} />
+                                            </Box>
                                         </Box>
                                     </Box>
 

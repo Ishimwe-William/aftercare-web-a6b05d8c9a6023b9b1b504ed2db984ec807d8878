@@ -146,7 +146,7 @@ const InventoryTable = ({
                                     <TableRow key={part.id} hover>
                                         <TableCell>
                                             <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                                                {part.id}
+                                                {part.id?.substring(0, 8)}
                                             </Typography>
                                         </TableCell>
                                         <TableCell>

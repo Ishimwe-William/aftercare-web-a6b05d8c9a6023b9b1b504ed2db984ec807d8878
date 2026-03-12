@@ -26,7 +26,7 @@ const TechniciansPage = () => {
 
     const [filters, setFilters] = useState({
         status: 'all',
-        sortBy: 'name',
+        speciality: 'all',
         searchTerm: ''
     });
 
@@ -50,6 +50,19 @@ const TechniciansPage = () => {
 
     const handleFilterChange = (field, value) => {
         setFilters({ ...filters, [field]: value });
+    };
+
+    const handleClearFilters = () => {
+        setFilters({
+            status: 'all',
+            speciality: 'all',
+            searchTerm: ''
+        });
+
+        // If there was a search term, ping the backend to restore the full list
+        if (filters.searchTerm.trim()) {
+            dispatch(fetchTechnicians());
+        }
     };
 
     const handleSearch = (searchTerm) => {
@@ -146,29 +159,52 @@ const TechniciansPage = () => {
     const getFilteredTechnicians = () => {
         let filtered = [...technicians];
 
+        // 1. Fix Status filter (use tech.status for online/offline, not enabled)
         if (filters.status !== 'all') {
-            const statusBool = filters.status === 'online';
-            filtered = filtered.filter(tech => tech.enabled === statusBool);
+            const isOnline = filters.status === 'online';
+            filtered = filtered.filter(tech => tech.status === isOnline);
         }
 
+        // 2. Add the missing Speciality filter
+        if (filters.speciality && filters.speciality !== 'all') {
+            filtered = filtered.filter(tech => tech.speciality === filters.speciality);
+        }
+
+        // Helper to grab metrics from performanceData for sorting
+        const getMetric = (techId) => {
+            return performanceData.find(p => p.technicianId === techId) || {};
+        };
+
+        // 3. Sort correctly using the performance metrics
         switch (filters.sortBy) {
             case 'name':
-                filtered.sort((a, b) =>
-                    (a.fullName || a.username).localeCompare(b.fullName || b.username)
-                );
+                filtered.sort((a, b) => {
+                    const nameA = a.fullName || a.username || '';
+                    const nameB = b.fullName || b.username || '';
+                    return nameA.localeCompare(nameB);
+                });
                 break;
             case 'efficiency':
+                // Sorts by Highest Efficiency Score first
                 filtered.sort((a, b) => {
-                    const aTime = a.averageCompletionTimeHours || 999;
-                    const bTime = b.averageCompletionTimeHours || 999;
-                    return aTime - bTime;
+                    const effA = getMetric(a.id).efficiencyScore || 0;
+                    const effB = getMetric(b.id).efficiencyScore || 0;
+                    return effB - effA;
                 });
                 break;
             case 'activeTasks':
-                filtered.sort((a, b) => (b.activeTasks || 0) - (a.activeTasks || 0));
+                filtered.sort((a, b) => {
+                    const activeA = getMetric(a.id).activeTasks || a.activeTasks || 0;
+                    const activeB = getMetric(b.id).activeTasks || b.activeTasks || 0;
+                    return activeB - activeA;
+                });
                 break;
             case 'completedTasks':
-                filtered.sort((a, b) => (b.completedTasks || 0) - (a.completedTasks || 0));
+                filtered.sort((a, b) => {
+                    const compA = getMetric(a.id).totalTasksCompleted || a.completedTasks || 0;
+                    const compB = getMetric(b.id).totalTasksCompleted || b.completedTasks || 0;
+                    return compB - compA;
+                });
                 break;
             default:
                 break;
@@ -197,6 +233,7 @@ const TechniciansPage = () => {
 
             <TechnicianFilters
                 filters={filters}
+                onClearFilters={handleClearFilters}
                 onFilterChange={handleFilterChange}
                 onSearch={handleSearch}
             />

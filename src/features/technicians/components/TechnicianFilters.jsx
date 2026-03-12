@@ -7,14 +7,16 @@ import {
     Select,
     MenuItem,
     TextField,
-    InputAdornment
+    InputAdornment,
+    Button
 } from '@mui/material';
-import { Search } from '@mui/icons-material';
+import { Search, Clear } from '@mui/icons-material';
+import { SPECIALITY_OPTIONS } from '../../../utils/specialityUtils';
 
-const TechnicianFilters = ({ filters, onFilterChange, onSearch }) => {
+const TechnicianFilters = ({ filters, onFilterChange, onSearch, onClearFilters }) => {
     return (
         <Paper sx={{ p: 2, mb: 3 }}>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} sm={6} md={3}>
                     <TextField
                         fullWidth
@@ -34,7 +36,7 @@ const TechnicianFilters = ({ filters, onFilterChange, onSearch }) => {
                     <FormControl fullWidth>
                         <InputLabel>Status</InputLabel>
                         <Select
-                            value={filters.status}
+                            value={filters.status || 'all'}
                             label="Status"
                             onChange={(e) => onFilterChange('status', e.target.value)}
                         >
@@ -46,18 +48,31 @@ const TechnicianFilters = ({ filters, onFilterChange, onSearch }) => {
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                     <FormControl fullWidth>
-                        <InputLabel>Sort By</InputLabel>
+                        <InputLabel>Speciality</InputLabel>
                         <Select
-                            value={filters.sortBy}
-                            label="Sort By"
-                            onChange={(e) => onFilterChange('sortBy', e.target.value)}
+                            value={filters.speciality || 'all'}
+                            label="Speciality"
+                            onChange={(e) => onFilterChange('speciality', e.target.value)}
                         >
-                            <MenuItem value="name">Name</MenuItem>
-                            <MenuItem value="efficiency">Efficiency</MenuItem>
-                            <MenuItem value="activeTasks">Active Tasks</MenuItem>
-                            <MenuItem value="completedTasks">Completed Tasks</MenuItem>
+                            <MenuItem value="all">All Specialities</MenuItem>
+                            {SPECIALITY_OPTIONS.map(opt => (
+                                <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
+                </Grid>
+                {/* Replaced Sort By with Clear Filters Button */}
+                <Grid item xs={12} sm={6} md={3}>
+                    <Button
+                        variant="outlined"
+                        color="secondary"
+                        fullWidth
+                        onClick={onClearFilters}
+                        startIcon={<Clear />}
+                        sx={{ height: '56px' }} // Matches the height of MUI TextFields
+                    >
+                        Clear Filters
+                    </Button>
                 </Grid>
             </Grid>
         </Paper>
