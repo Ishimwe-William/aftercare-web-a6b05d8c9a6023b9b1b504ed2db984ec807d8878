@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Paper,
     Grid,
@@ -7,16 +7,36 @@ import {
     Button,
     Stack,
     Typography,
-    FormControl
 } from '@mui/material';
 import {
     FilterList as FilterIcon,
-    Add as AddIcon
+    Add as AddIcon,
+    CalendarToday
 } from '@mui/icons-material';
+import DateRangePicker from '../../../utils/DateRangePicker';
 
-export const TaskFiltersPanel = ({filters, onFilterChange, technicians, openDialog}) => {
+export const TaskFiltersPanel = ({ filters, onFilterChange, technicians, openDialog }) => {
+    const [datePickerOpen, setDatePickerOpen] = useState(false);
+
+    const handleDateApply = (range) => {
+        onFilterChange({
+            startDate: range.startDate,
+            endDate: range.endDate
+        });
+        setDatePickerOpen(false);
+    };
+
+    const formatDate = (date) => {
+        if (!date) return '';
+        return new Date(date).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+        });
+    };
+
     const handleChange = (field, value) => {
-        onFilterChange({[field]: value});
+        onFilterChange({ [field]: value });
     };
 
     const handleClearFilters = () => {
@@ -24,127 +44,142 @@ export const TaskFiltersPanel = ({filters, onFilterChange, technicians, openDial
             status: 'all',
             priority: 'all',
             technicianId: '',
-            motorcycleId: '',
-            dateRange: 'all',
-            plateNumber: ''
+            plateNumber: '',
+            startDate: null,
+            endDate: null
         });
     };
 
     return (
-        <Paper sx={{p: 3, mb: 3, borderRadius: 2}}>
+        <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }}>
             <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-                <FilterIcon color="primary"/>
+                <FilterIcon color="primary" />
                 <Typography variant="h6" fontWeight="bold">
                     Filters
                 </Typography>
             </Stack>
 
             <Grid container spacing={2}>
+                {/* Status */}
                 <Grid item xs={12} sm={6} md={3}>
-                    <FormControl fullWidth size="small" sx={{m: 1, minWidth: 120}}>
-                        <TextField
-                            select
-                            fullWidth
-                            label="Status"
-                            value={filters.status}
-                            onChange={(e) => handleChange('status', e.target.value)}
-                            size="small"
-                        >
-                            <MenuItem value="all">All Statuses</MenuItem>
-                            <MenuItem value="PENDING">Pending</MenuItem>
-                            <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
-                            <MenuItem value="PAUSED">Paused</MenuItem>
-                            <MenuItem value="COMPLETED">Completed</MenuItem>
-                            <MenuItem value="CANCELLED">Cancelled</MenuItem>
-                        </TextField>
-                    </FormControl>
+
+                    <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        label="Status"
+                        value={filters.status}
+                        onChange={(e) => handleChange('status', e.target.value)}
+                    >
+                        <MenuItem value="all">All Statuses</MenuItem>
+                        <MenuItem value="PENDING">Pending</MenuItem>
+                        <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+                        <MenuItem value="PAUSED">Paused</MenuItem>
+                        <MenuItem value="COMPLETED">Completed</MenuItem>
+                        <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                    </TextField>
                 </Grid>
 
+                {/* Priority — already working perfectly */}
                 <Grid item xs={12} sm={6} md={3}>
-                    <FormControl fullWidth size="small" sx={{m: 1, minWidth: 120}}>
-                        <TextField
-                            select
-                            fullWidth
-                            label="Priority"
-                            value={filters.priority}
-                            onChange={(e) => handleChange('priority', e.target.value)}
-                            size="small"
-                        >
-                            <MenuItem value="all">All Priorities</MenuItem>
-                            <MenuItem value="HIGH">High</MenuItem>
-                            <MenuItem value="MEDIUM">Medium</MenuItem>
-                            <MenuItem value="LOW">Low</MenuItem>
-                        </TextField>
-                    </FormControl>
+                    {/*<TextField*/}
+                    {/*    select*/}
+                    {/*    fullWidth*/}
+                    {/*    size="small"*/}
+                    {/*    label="Priority"*/}
+                    {/*    value={filters.priority}*/}
+                    {/*    onChange={(e) => handleChange('priority', e.target.value)}*/}
+                    {/*>*/}
+                    {/*    <MenuItem value="all">All Priorities</MenuItem>*/}
+                    {/*    <MenuItem value="HIGH">High</MenuItem>*/}
+                    {/*    <MenuItem value="MEDIUM">Medium</MenuItem>*/}
+                    {/*    <MenuItem value="LOW">Low</MenuItem>*/}
+                    {/*</TextField>*/}
+
+                    <TextField select fullWidth size="small" label="Priority"
+                               value={filters.priority}
+                               onChange={(e) => handleChange('priority', e.target.value)}
+                    >
+                        <MenuItem value="all">All Priorities</MenuItem>
+                        <MenuItem value="critical">Critical</MenuItem>   {/* ← ADD */}
+                        <MenuItem value="high">High</MenuItem>           {/* ← lowercase */}
+                        <MenuItem value="medium">Medium</MenuItem>       {/* ← lowercase */}
+                        <MenuItem value="low">Low</MenuItem>             {/* ← lowercase */}
+                    </TextField>
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
-                    <FormControl fullWidth size="small" sx={{m: 1, minWidth: 120}}>
-                        <TextField
-                            select
-                            fullWidth
-                            label="Technician"
-                            value={filters.technicianId}
-                            onChange={(e) => handleChange('technicianId', e.target.value)}
-                            size="small"
-                        >
-                            <MenuItem value="">All Technicians</MenuItem>
-                            {technicians?.map((tech) => (
-                                <MenuItem key={tech.id} value={tech.id}>
-                                    {tech.fullName}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                    </FormControl>
+                {/* Technician */}
+                <Grid item xs={12} sm={6} md={3} sx={{minWidth: 120}}>
+                    <TextField
+                        select
+                        fullWidth
+                        size="small"
+                        label="Technician"
+                        value={filters.technicianId}
+                        onChange={(e) => handleChange('technicianId', e.target.value)}
+                    >
+                        <MenuItem value="">All Technicians</MenuItem>
+                        {technicians?.map((tech) => (
+                            <MenuItem key={tech.id} value={tech.id}>
+                                {tech.fullName}
+                            </MenuItem>
+                        ))}
+                    </TextField>
                 </Grid>
 
+                {/* Date Range Picker */}
                 <Grid item xs={12} sm={6} md={3}>
-                    <FormControl fullWidth size="small" sx={{m: 1, minWidth: 120}}>
-                        <TextField
-                            select
-                            fullWidth
-                            label="Date Range"
-                            value={filters.dateRange}
-                            onChange={(e) => handleChange('dateRange', e.target.value)}
-                            size="small"
-                        >
-                            <MenuItem value="all">All Time</MenuItem>
-                            <MenuItem value="today">Today</MenuItem>
-                            <MenuItem value="week">This Week</MenuItem>
-                            <MenuItem value="month">This Month</MenuItem>
-                        </TextField>
-                    </FormControl>
+                    <Button
+                        variant="outlined"
+                        fullWidth
+                        startIcon={<CalendarToday />}
+                        onClick={() => setDatePickerOpen(true)}
+                        sx={{
+                            height: '40px',
+                            justifyContent: 'flex-start',
+                            color: (filters.startDate || filters.endDate) ? '#111' : '#666',
+                            borderColor: '#c4c4c4',
+                            textTransform: 'none'
+                        }}
+                    >
+                        {(filters.startDate && filters.endDate)
+                            ? `${formatDate(filters.startDate)} - ${formatDate(filters.endDate)}`
+                            : 'Select Date Range'}
+                    </Button>
                 </Grid>
 
+                {/* Plate Number Search */}
                 <Grid item xs={12}>
-                    <FormControl fullWidth size="small" sx={{m: 1, minWidth: 120}}>
-                        <TextField
-                            fullWidth
-                            label="Search by Motorcycle Plate Number"
-                            value={filters.plateNumber}
-                            onChange={(e) => handleChange('plateNumber', e.target.value)}
-                            placeholder="Enter plate number..."
-                            size="small"
-                        />
-                    </FormControl>
+                    <TextField
+                        fullWidth
+                        size="small"
+                        label="Search by Plate Number"
+                        value={filters.plateNumber}
+                        onChange={(e) => handleChange('plateNumber', e.target.value)}
+                        placeholder="Enter plate number..."
+                    />
                 </Grid>
             </Grid>
-            <Button
-                variant="outlined"
-                sx={{mr: 3, mt: 1}}
-                onClick={handleClearFilters}
-            >
+
+            <Button variant="outlined" sx={{ mr: 3, mt: 2 }} onClick={handleClearFilters}>
                 Clear Filters
             </Button>
 
             <Button
                 variant="contained"
-                startIcon={<AddIcon/>}
+                startIcon={<AddIcon />}
                 onClick={() => openDialog('create')}
-                sx={{marginInline: 3, mt: 1}}
+                sx={{ mt: 2 }}
             >
                 Create Task
             </Button>
+
+            <DateRangePicker
+                open={datePickerOpen}
+                onClose={() => setDatePickerOpen(false)}
+                onApply={handleDateApply}
+                initialRange={{ startDate: filters.startDate, endDate: filters.endDate }}
+            />
         </Paper>
     );
 };
