@@ -135,62 +135,48 @@ const MonitoringPage = () => {
     const paginatedCases = filteredCases.slice(page * actualRowsPerPage, page * actualRowsPerPage + actualRowsPerPage);
 
     const handleExportPdf = async () => {
-        // Fetch ALL cases matching the filters from the backend, not just the current page
-        const startDateVal = filters.startDate ? (filters.startDate instanceof Date ? filters.startDate : new Date(filters.startDate)) : null;
-        const endDateVal = filters.endDate ? (filters.endDate instanceof Date ? filters.endDate : new Date(filters.endDate)) : null;
-
-        const params = {
-            ...(filters.status && {status: filters.status}),
-            ...(filters.technicianId && {technicianId: filters.technicianId}),
-            ...(filters.motorcycleId && {motorcycleId: filters.motorcycleId}),
-            ...(startDateVal && {startDate: startDateVal}),
-            ...(endDateVal && {endDate: endDateVal}),
-            page: 0,
-            size: 10000, // Fetch all results in one page
-        };
-
-        try {
-            const result = await dispatch(fetchServiceCases(params));
-            const allFilteredCases = result?.payload?.content || [];
-
-            // Fetch invoices for completed cases to include in report
-            const completedCases = allFilteredCases.filter(c => c.status === 'COMPLETED');
-            const casesWithInvoices = await Promise.all(
-                completedCases.map(async (caseItem) => {
-                    try {
-                        const invoiceResult = await dispatch(
-                            fetchTaskInvoices(caseItem.caseId)
-                        );
-                        return {
-                            ...caseItem,
-                            invoice: invoiceResult?.payload || null
-                        };
-                    } catch (err) {
-                        // If invoice fetch fails, just return case without invoice
-                        return {...caseItem, invoice: null};
-                    }
-                })
-            );
-
-            // Merge back with non-completed cases
-            const enrichedCases = allFilteredCases.map(c => {
-                if (c.status === 'COMPLETED') {
-                    const withInvoice = casesWithInvoices.find(ci => ci.caseId === c.caseId);
-                    return withInvoice || c;
-                }
-                return c;
-            });
-
-            exportPdf({
-                type: 'monitoringReport',
-                data: {
-                    cases: enrichedCases,
-                    filters,
-                },
-            });
-        } catch (err) {
-            console.error('Error exporting PDF:', err);
+        if (!filteredCases.length) {
+            alert("No cases to export after applying filters.");
+            return;
         }
+
+        // Use the exact same filtered list as CSV + table view
+        const completedCases = filteredCases.filter(c => c.status === 'COMPLETED');
+
+        // Enrich only completed cases with invoice data (for costs in PDF)
+        const casesWithInvoices = await Promise.all(
+            completedCases.map(async (caseItem) => {
+                try {
+                    const invoiceResult = await dispatch(
+                        fetchTaskInvoices(caseItem.caseId)
+                    );
+                    return {
+                        ...caseItem,
+                        invoice: invoiceResult?.payload || null
+                    };
+                } catch (err) {
+                    console.warn(`Invoice fetch failed for ${caseItem.caseId}`, err);
+                    return { ...caseItem, invoice: null };
+                }
+            })
+        );
+
+        // Merge invoice data back into full filtered list
+        const enrichedCases = filteredCases.map(c => {
+            if (c.status === 'COMPLETED') {
+                const withInvoice = casesWithInvoices.find(ci => ci.caseId === c.caseId);
+                return withInvoice || c;
+            }
+            return c;
+        });
+
+        exportPdf({
+            type: 'monitoringReport',
+            data: {
+                cases: enrichedCases,
+                filters,
+            },
+        });
     };
 
     const handleGenerateInvoice = (caseItem) => {

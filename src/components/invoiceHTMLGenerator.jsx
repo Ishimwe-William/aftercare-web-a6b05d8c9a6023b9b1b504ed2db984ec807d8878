@@ -5,7 +5,7 @@
  */
 import { brandHeader, wrapDocument, formatDate, formatCurrency } from '../utils/documentShared';
 
-export const generateInvoiceHTMLWeb = (invoiceData, calculations, task, additionalNotes, laborRate) => {
+export const generateInvoiceHTMLWeb = (invoiceData, calculations, task, additionalNotes) => {
     const lineItems    = invoiceData?.lineItems || [];
     const hasLineItems = lineItems.length > 0;
 
