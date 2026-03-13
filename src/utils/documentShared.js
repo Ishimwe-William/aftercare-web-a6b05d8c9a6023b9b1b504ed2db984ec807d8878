@@ -107,29 +107,31 @@ export const sharedStyles = `
     }
 
     /* ── DATA TABLE (reports) ── */
-    .data-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; }
+    .data-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; border: 1px solid #111; }
     .data-table thead tr { border-bottom: 1.5px solid #111; page-break-after: avoid; }
     .data-table th {
         padding: 6px 8px; font-size: 9px; font-weight: 700;
         letter-spacing: 1px; text-transform: uppercase; color: #555; text-align: left;
+        border-right: 1px solid #111; border-bottom: 1.5px solid #111;
     }
+    .data-table th:last-child { border-right: none; }
     .data-table th.r { text-align: right; }
-    .data-table tbody tr { border-bottom: 1px solid ${LG}; page-break-inside: avoid; }
-    .data-table tbody tr:last-child { border-bottom: none; }
-    .data-table td { padding: 7px 8px; vertical-align: top; }
+    .data-table tbody tr { page-break-inside: avoid; }
+    .data-table td { padding: 7px 8px; vertical-align: top; border: 1px solid #111; }
     .data-table td.r { text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
 
     /* ── PARTS TABLE (invoice) ── */
-    .parts-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; }
+    .parts-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 12px; border: 1px solid #111; }
     .parts-table thead tr { border-bottom: 1.5px solid #111; page-break-after: avoid; }
     .parts-table th {
         padding: 6px 8px; font-size: 9px; font-weight: 700;
         letter-spacing: 1px; text-transform: uppercase; color: #555; text-align: left;
+        border-right: 1px solid #111; border-bottom: 1.5px solid #111;
     }
+    .parts-table th:last-child { border-right: none; }
     .parts-table th.qty, .parts-table th.unit, .parts-table th.total { text-align: right; }
-    .parts-table tbody tr { border-bottom: 1px solid ${LG}; page-break-inside: avoid; }
-    .parts-table tbody tr:last-child { border-bottom: none; }
-    .parts-table td { padding: 7px 8px; vertical-align: top; }
+    .parts-table tbody tr { page-break-inside: avoid; }
+    .parts-table td { padding: 7px 8px; vertical-align: top; border: 1px solid #111; }
     .desc .part-name { display: block; font-weight: 600; color: #111; font-size: 12px; }
     .desc .part-desc { display: block; color: #777; font-size: 11px; margin-top: 2px; }
     .desc .part-note { display: block; color: #aaa; font-style: italic; margin-top: 2px; }
@@ -312,9 +314,5 @@ export const formatCurrency = (amount) =>
     Number(amount || 0).toLocaleString('en-US') + ' RWF';
 
 export const statusBadge = (status = '') => {
-    const s = status.toLowerCase();
-    if (['completed', 'resolved', 'active'].includes(s)) return `<span class="badge badge-green">${status}</span>`;
-    if (['pending', 'in_progress', 'in progress'].includes(s)) return `<span class="badge badge-yellow">${status}</span>`;
-    if (['cancelled', 'failed', 'overdue'].includes(s)) return `<span class="badge badge-red">${status}</span>`;
     return `<span class="badge badge-gray">${status}</span>`;
 };

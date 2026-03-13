@@ -26,7 +26,8 @@ const generateServiceReportHTML = (data) => {
 
     const issueCost = caseDetails.issueCost ?? caseDetails.laborCost ?? 0;
     const partsCost = caseDetails.partsCost ?? 0;
-    const totalCost = caseDetails.totalCost ?? (issueCost + partsCost);
+    const discount = caseDetails.discount ?? caseDetails.discountAmount ?? 0;
+    const totalCost = caseDetails.totalCost ?? (issueCost + partsCost - discount);
 
     const partsRows = parts.length > 0
         ? parts.map(p => `
@@ -75,6 +76,7 @@ const generateServiceReportHTML = (data) => {
                 <div style="width:260px">
                     <div class="s-row"><span>Labor Cost</span><span class="s-val">${formatCurrency(issueCost)}</span></div>
                     <div class="s-row"><span>Parts Cost</span><span class="s-val">${formatCurrency(partsCost)}</span></div>
+                    ${discount > 0 ? `<div class="s-row s-discount"><span>Discount</span><span class="s-val">− ${formatCurrency(discount)}</span></div>` : ''}
                     <div class="total-row">
                         <span class="t-label">TOTAL</span>
                         <span class="t-val">${formatCurrency(totalCost)}</span>
@@ -169,13 +171,21 @@ const generateMonitoringReportHTML = (data) => {
         const cost = Number(c.partsCost ?? 0);
         return cost > 0 ? cost : null;
     };
+    const getDiscount = (c) => {
+        if (c.status !== 'COMPLETED') return null;
+        if (c.invoice?.discount && Number(c.invoice.discount) > 0) return Number(c.invoice.discount);
+        if (c.invoice?.discountAmount && Number(c.invoice.discountAmount) > 0) return Number(c.invoice.discountAmount);
+        const discount = Number(c.discount ?? c.discountAmount ?? 0);
+        return discount > 0 ? discount : null;
+    };
     const getTotal = (c) => {
         if (c.status !== 'COMPLETED') return null;
         if (c.invoice?.totalCost && Number(c.invoice.totalCost) > 0) return Number(c.invoice.totalCost);
         if (c.totalCost && Number(c.totalCost) > 0) return Number(c.totalCost);
         const labor = getLabor(c) ?? 0;
         const parts = getParts(c) ?? 0;
-        const total = labor + parts;
+        const discount = getDiscount(c) ?? 0;
+        const total = labor + parts - discount;
         return total > 0 ? total : null;
     };
 
@@ -184,6 +194,7 @@ const generateMonitoringReportHTML = (data) => {
     const totalCost   = completedCases.reduce((s, c) => s + (getTotal(c) ?? 0), 0);
     const totalLabor  = completedCases.reduce((s, c) => s + (getLabor(c) ?? 0), 0);
     const totalParts  = completedCases.reduce((s, c) => s + (getParts(c) ?? 0), 0);
+    const totalDiscount = completedCases.reduce((s, c) => s + (getDiscount(c) ?? 0), 0);
 
     const countByStatus = cases.reduce((acc, c) => {
         const s = (c.status || 'UNKNOWN').toUpperCase();
@@ -227,12 +238,13 @@ const generateMonitoringReportHTML = (data) => {
                 <strong style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#888">Filters applied: </strong>${filterNote}
             </div>
 
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+            <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px">
                 ${[
         ['Total Cases',   totalCases,              '#111'],
         ['Total Cost',    formatCurrency(totalCost), '#111'],
         ['Labor Cost',    formatCurrency(totalLabor),'#555'],
         ['Parts Cost',    formatCurrency(totalParts),'#555'],
+        ['Total Discount',formatCurrency(totalDiscount),'#DC2626'],
     ].map(([label, val, col]) => `
                     <div style="border:1px solid #E5E7EB;border-radius:4px;padding:9px 12px;background:#fff">
                         <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#888;margin-bottom:4px">${label}</div>
@@ -267,6 +279,7 @@ const generateMonitoringReportHTML = (data) => {
                 <div style="width:280px">
                     <div class="s-row"><span>Labor Cost</span><span class="s-val">${formatCurrency(totalLabor)}</span></div>
                     <div class="s-row"><span>Parts Cost</span><span class="s-val">${formatCurrency(totalParts)}</span></div>
+                    ${totalDiscount > 0 ? `<div class="s-row s-discount"><span>Discount</span><span class="s-val">− ${formatCurrency(totalDiscount)}</span></div>` : ''}
                     <div class="total-row">
                         <span class="t-label">TOTAL (${totalCases} case${totalCases !== 1 ? 's' : ''})</span>
                         <span class="t-val">${formatCurrency(totalCost)}</span>
@@ -297,9 +310,13 @@ const printHTML = (html) => {
 
         iframe.addEventListener('load', () => {
             try {
-                iframe.contentWindow.focus();
-                iframe.contentWindow.print();
-                resolve();
+                // Add small delay to ensure iframe content is fully rendered
+                // especially important on mobile devices
+                setTimeout(() => {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+                    resolve();
+                }, 100);
             } catch (err) {
                 reject(err);
             } finally {
